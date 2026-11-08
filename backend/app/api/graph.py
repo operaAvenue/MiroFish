@@ -527,8 +527,8 @@ def _build_graph_impl():
             }), 400
         
         resume_existing_batch = False
-        if project.status == ProjectStatus.GRAPH_BUILDING:
-            if _project_has_active_build(project):
+        if project.status in {ProjectStatus.GRAPH_BUILDING, ProjectStatus.FAILED}:
+            if project.status == ProjectStatus.GRAPH_BUILDING and _project_has_active_build(project):
                 return jsonify({
                     "success": True,
                     "data": {
@@ -555,7 +555,7 @@ def _build_graph_impl():
                 }:
                     resume_existing_batch = True
 
-            if not resume_existing_batch:
+            if not resume_existing_batch and project.status == ProjectStatus.GRAPH_BUILDING:
                 project.status = ProjectStatus.FAILED
                 project.error = (
                     "Graph build task is no longer present; the persisted Zep "
@@ -619,7 +619,7 @@ def _build_graph_impl():
             }), 400
 
         # Only mutate Cloud state after the complete rebuild request validates.
-        if project.status == ProjectStatus.FAILED or (
+        if (project.status == ProjectStatus.FAILED and not resume_existing_batch) or (
             force and project.status == ProjectStatus.GRAPH_COMPLETED
         ):
             graph_id_to_delete = project.graph_id
