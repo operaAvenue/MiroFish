@@ -518,6 +518,7 @@ class SimulationRunner:
                 sys.executable,  # Python解释器
                 script_path,
                 "--config", config_path,  # 使用完整配置文件路径
+                "--no-wait",  # 完成后自动退出，避免保持交互等待导致进程无法结束
             ]
             
             # 如果指定了最大轮数，添加到命令行参数
