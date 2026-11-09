@@ -6,6 +6,7 @@ LLM客户端封装
 import json
 import logging
 import re
+import time
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 
@@ -117,16 +118,30 @@ class LLMClient:
         max_tokens: Optional[int],
         response_format: Optional[Dict[str, Any]],
     ) -> Any:
-        """Send one raw Chat Completions request through the compatibility layer."""
-
-        return create_chat_completion(
-            self.client,
-            model=self.model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format=response_format,
-        )
+        """Send one raw Chat Completions request through the compatibility layer with retry on transient server errors."""
+        max_retries = 3
+        backoff = 1.0
+        for i in range(max_retries):
+            try:
+                return create_chat_completion(
+                    self.client,
+                    model=self.model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    response_format=response_format,
+                )
+            except Exception as error:
+                status_code = getattr(error, "status_code", None)
+                if status_code in {500, 502, 503, 504} and i < max_retries - 1:
+                    logger.warning(
+                        "LLM provider transient error HTTP %s on attempt %s/%s; retrying in %.1fs...",
+                        status_code, i + 1, max_retries, backoff
+                    )
+                    time.sleep(backoff)
+                    backoff *= 2
+                    continue
+                raise
     
     def chat(
         self,
