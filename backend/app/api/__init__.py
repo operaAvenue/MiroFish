@@ -2,9 +2,15 @@
 API路由模块
 """
 
-from .graph import graph_bp
-from .simulation import simulation_bp
-from .report import report_bp
+from flask import Blueprint
+
+graph_bp = Blueprint('graph', __name__)
+simulation_bp = Blueprint('simulation', __name__)
+report_bp = Blueprint('report', __name__)
+
+from . import graph  # noqa: E402, F401
+from . import simulation  # noqa: E402, F401
+from . import report  # noqa: E402, F401
 from .auth import auth_bp
 from .admin import admin_bp
 from .payments import payments_bp
