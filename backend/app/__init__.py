@@ -63,10 +63,17 @@ def create_app(config_class=Config):
         return response
     
     # 注册蓝图
-    from .api import graph_bp, simulation_bp, report_bp
+    from .api import graph_bp, simulation_bp, report_bp, auth_bp, admin_bp, payments_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(payments_bp, url_prefix='/api/payments')
+
+    # 初始化认证与用户数据库
+    from .services.auth_service import AuthService
+    AuthService.get_instance()
     
     # 健康检查
     @app.route('/health')

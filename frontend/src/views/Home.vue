@@ -2,12 +2,17 @@
   <div class="home-container">
     <!-- 顶部导航栏 -->
     <nav class="navbar">
-      <div class="nav-brand">MIROFISH</div>
+      <div class="nav-brand">{{ pageConfig.brandName || 'ORACLE JURÍDICO' }}</div>
       <div class="nav-links">
+        <router-link v-if="isAdmin" to="/admin" class="admin-nav-link">
+          ⚙️ Painel Admin
+        </router-link>
+        <div class="user-pill" v-if="user">
+          <img v-if="user.picture" :src="user.picture" class="user-nav-avatar" alt="Avatar" />
+          <span class="user-nav-name">{{ user.name || user.email }}</span>
+        </div>
         <LanguageSwitcher />
-        <a href="https://github.com/666ghj/MiroFish" target="_blank" class="github-link">
-          {{ $t('nav.visitGithub') }} <span class="arrow">↗</span>
-        </a>
+        <button class="logout-nav-btn" @click="handleLogout">Sair</button>
       </div>
     </nav>
 
@@ -16,25 +21,21 @@
       <section class="hero-section">
         <div class="hero-left">
           <div class="tag-row">
-            <span class="orange-tag">{{ $t('home.tagline') }}</span>
-            <span class="version-text">{{ $t('home.version') }}</span>
+            <span class="orange-tag">{{ pageConfig.tagline || $t('home.tagline') }}</span>
+            <span class="version-text">{{ pageConfig.version || $t('home.version') }}</span>
           </div>
           
           <h1 class="main-title">
-            {{ $t('home.heroTitle1') }}<br>
-            <span class="gradient-text">{{ $t('home.heroTitle2') }}</span>
+            {{ pageConfig.heroTitle1 || $t('home.heroTitle1') }}<br>
+            <span class="gradient-text">{{ pageConfig.heroTitle2 || $t('home.heroTitle2') }}</span>
           </h1>
           
           <div class="hero-desc">
             <p>
-              <i18n-t keypath="home.heroDesc" tag="span">
-                <template #brand><span class="highlight-bold">{{ $t('home.heroDescBrand') }}</span></template>
-                <template #agentScale><span class="highlight-orange">{{ $t('home.heroDescAgentScale') }}</span></template>
-                <template #optimalSolution><span class="highlight-code">{{ $t('home.heroDescOptimalSolution') }}</span></template>
-              </i18n-t>
+              {{ pageConfig.heroDesc || $t('home.heroDesc') }}
             </p>
             <p class="slogan-text">
-              {{ $t('home.slogan') }}<span class="blinking-cursor">_</span>
+              {{ pageConfig.slogan || $t('home.slogan') }}<span class="blinking-cursor">_</span>
             </p>
           </div>
            
@@ -44,7 +45,7 @@
         <div class="hero-right">
           <!-- Logo 区域 -->
           <div class="logo-container">
-            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="MiroFish Logo" class="hero-logo" />
+            <img :src="pageConfig.heroImageUrl || defaultHeroLogo" alt="Hero Logo" class="hero-logo" />
           </div>
           
           <button class="scroll-down-btn" @click="scrollToBottom">
@@ -216,8 +217,18 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import HistoryDatabase from '../components/HistoryDatabase.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import { useAuth } from '../store/auth'
+import defaultHeroLogo from '../assets/logo/MiroFish_logo_left.jpeg'
 
 const router = useRouter()
+const { state, isAdmin, logout } = useAuth()
+const user = computed(() => state.user)
+const pageConfig = computed(() => state.publicConfig.homepage_config || {})
+
+const handleLogout = async () => {
+  await logout()
+  router.push('/login')
+}
 
 // 表单数据
 const formData = ref({
@@ -358,6 +369,59 @@ const startSimulation = () => {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  color: #eab308;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.admin-nav-link:hover {
+  background: rgba(234, 179, 8, 0.25);
+  color: #fef08a;
+}
+
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.user-nav-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+
+.logout-nav-btn {
+  background: none;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #f87171;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-nav-btn:hover {
+  background: rgba(248, 113, 113, 0.15);
 }
 
 .github-link {
